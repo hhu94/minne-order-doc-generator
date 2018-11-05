@@ -47,7 +47,7 @@ function downloadAsPdf(orderSets) {
             pdf.text(20, 30, [
                 `注文番号：${orderSet.orderId}`,
                 `お客様ID：${orderSet.orders[0].注文者のユーザーID}`,
-                `お客様ID：${orderSet.orders[0].注文日}`
+                `ご注文日：${orderSet.orders[0].注文日}`
             ]);
             pdf.text(20, 50, [
                 'この度は当ショップをご利用いただきありがとうございます。以下の通り納品させていただきます。',
