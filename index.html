@@ -2,17 +2,26 @@
 <html>
     <head>
          <meta charset="UTF-8">
+         <style>
+            .control-section {
+                margin: 10px;
+            }
+            label, input, button {
+                display: block;
+            }
+         </style>
     </head>
     <body>
-        <div>
+        <div class="control-section">
             <label for="selectFiles">注文一覧データをアップロード</label>
-            <span id="selectFiles">
+            <div id="selectFiles">
                 <input id="selectFile1" type="file" accept=".csv"/>
                 <input id="selectFile2" type="file" accept=".csv"/>
-            </span>
+            </div>
         </div>
-        <div>
-            <button onclick="handleDownload()" id="download">納品書と送り先の宛名をダウンロード</button>
+        <div class="control-section">
+            <label for="download">納品書と送り先の宛名をダウンロード</label>
+            <button onclick="handleDownload()" id="download">ダウンロード</button>
         </div>
     </body>
     <script src="./jspdf.min.js"></script>
