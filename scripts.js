@@ -8,7 +8,7 @@ class OrderSet {
 function handleDownload() {
     const files = getFiles();
     if (files.length === 0) {
-        alertAndThrow('Please select at least one CSV file.');
+        alertAndThrow('注文一覧データのCSVファイルを選んでください');
     }
     Papa.parse(files[0], {
         header: true,
@@ -29,11 +29,11 @@ function handleDownload() {
 }
 
 function downloadAsPdf(orderSets) {
-    fetch('sazanami-mincho.ttf').then(response => response.text().then(font => {
+    fetch('sawarabi-gothic-base64.txt').then(response => response.text().then(font => {
         const pdf = new jsPDF({lineHeight: 1.5});
-        pdf.addFileToVFS('sazanami-mincho.ttf', font)
-        pdf.addFont('sazanami-mincho.ttf', 'mincho', 'normal');
-        pdf.setFont('mincho');
+        pdf.addFileToVFS('sawarabi-gothic-base64.txt', font)
+        pdf.addFont('sawarabi-gothic-base64.txt', 'sawarabi-gothic', 'normal');
+        pdf.setFont('sawarabi-gothic');
         pdf.setFontSize('10');
 
         let i = 1;
@@ -73,13 +73,15 @@ function downloadAsPdf(orderSets) {
             // Destination address slip
             pdf.addPage();
             pdf.text(20, 20, `【${i}件目】`);
-            pdf.text(20, 50, orderSet.orders[0].配送先の郵便番号);
+            pdf.text(20, 50, formatPostalCode(orderSet.orders[0].配送先の郵便番号));
             const splitAddressText = pdf.splitTextToSize(
                 `${orderSet.orders[0].配送先の住所1} ${orderSet.orders[0].配送先の住所2}`,
                 70
             );
             pdf.text(20, 55, splitAddressText);
-            pdf.text(20, 60 + 5.5 * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
+            pdf.setFontSize(12);
+            pdf.text(20, 62.5 + 5.5 * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
+            pdf.setFontSize(10);
             i++;
         });
         pdf.save();
@@ -136,4 +138,8 @@ function getFiles() {
 function alertAndThrow(errorMessage) {
     alert(errorMessage);
     throw new Error(errorMessage);
+}
+
+function formatPostalCode(postalCode) {
+    return `〒${postalCode.substring(0, 3)}-${postalCode.substring(3)}`;
 }
