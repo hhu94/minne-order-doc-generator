@@ -5,38 +5,27 @@ class OrderSet {
     }
 }
 
-function handleDownload() {
-    const files = getFiles();
-    if (files.length === 0) {
-        alertAndThrow('注文一覧データのCSVファイルを選んでください');
-    }
-    Papa.parse(files[0], {
-        header: true,
-        complete: results => {
-            if (files.length === 1) {
-                downloadAsPdf(processData(results.data));
-            } else { // files.length === 2
-                Papa.parse(files[1], {
-                    header: true,
-                    complete: results2 => {
-                        // Merge the data from both files, then process it as a whole
-                        downloadAsPdf(processData(results.data.concat(results2.data)));
-                    }
-                })
-            }
-        }
-    });
-}
-
-function downloadAsPdf(orderSets) {
-    fetch('sawarabi-gothic-base64.txt').then(response => response.text().then(font => {
-        const pdf = new jsPDF({lineHeight: 1.5});
-        pdf.addFileToVFS('sawarabi-gothic-base64.txt', font)
-        pdf.addFont('sawarabi-gothic-base64.txt', 'sawarabi-gothic', 'normal');
-        pdf.setFont('sawarabi-gothic');
-        pdf.setFontSize('10');
-
+function generatePdf() {
+    parseAndGenerate((orderSets, pdf) => {
+        // Checklist
         let i = 1;
+        let currentY = 25;
+        orderSets.forEach(orderSet => {
+            if (i === 1 || currentY > 274) {
+                if (i > 1) {
+                    pdf.addPage();
+                }
+                currentY = 25;
+                pdf.line(20, currentY - 6, 190, currentY - 6);
+            }
+            pdf.text(20, currentY, `【${i}件目】 注文番号：${orderSet.orderId} ${orderSet.orders[0].配送先の氏名} 様`);
+            pdf.line(20, currentY + 3, 190, currentY + 3);
+            currentY += 10;
+            i++;
+        });
+
+        pdf.addPage();
+        i = 1;
         orderSets.forEach(orderSet => {
             if (i > 1) {
                 pdf.addPage();
@@ -53,12 +42,12 @@ function downloadAsPdf(orderSets) {
                 'この度は当ショップをご利用いただきありがとうございます。以下の通り納品させていただきます。',
                 '■ご注文商品■'
             ]);
-            let currentY = 61;
+            currentY = 61;
             let total = 0;
             orderSet.orders.forEach(order => {
                 const splitText = pdf.splitTextToSize(
                     `□個数：${order.数量} ${order.作品名} 単価：${order.販売価格}円 小計：${order.小計}円`,
-                    175
+                    170
                 );
                 pdf.text(20, currentY, splitText);
                 currentY += 5.5 * splitText.length;
@@ -85,6 +74,39 @@ function downloadAsPdf(orderSets) {
             i++;
         });
         pdf.save();
+    });
+}
+
+function parseAndGenerate(generator) {
+    const files = getFiles();
+    if (files.length === 0) {
+        alertAndThrow('注文一覧データのCSVファイルを選んでください');
+    }
+    fetch('sawarabi-gothic-base64.txt').then(response => response.text().then(font => {
+        // Configure PDF settings
+        const pdf = new jsPDF({lineHeight: 1.5});
+        pdf.addFileToVFS('sawarabi-gothic-base64.txt', font)
+        pdf.addFont('sawarabi-gothic-base64.txt', 'sawarabi-gothic', 'normal');
+        pdf.setFont('sawarabi-gothic');
+        pdf.setFontSize('10');
+
+        // Parse CSV files
+        Papa.parse(files[0], {
+            header: true,
+            complete: results => {
+                if (files.length === 1) {
+                    generator(processData(results.data), pdf);
+                } else { // files.length === 2
+                    Papa.parse(files[1], {
+                        header: true,
+                        complete: results2 => {
+                            // Merge the data from both files, then process it as a whole
+                            generator(processData(results.data.concat(results2.data)), pdf);
+                        }
+                    })
+                }
+            }
+        });
     }));
 }
 
@@ -118,7 +140,7 @@ function verifyHeaders(order) {
         || order.配送先の郵便番号 == null
         || order.配送先の氏名 == null
     ) {
-        alertAndThrow('An expected header is missing in one of the provided files.');
+        alertAndThrow('エラーが発生しました：An expected header is missing in one of the provided files.');
     }
 }
 
