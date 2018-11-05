@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+         <meta charset="UTF-8">
+    </head>
+    <body>
+        <div>
+            <label for="selectFiles">注文一覧データをアップロード</label>
+            <span id="selectFiles">
+                <input id="selectFile1" type="file" accept=".csv"/>
+                <input id="selectFile2" type="file" accept=".csv"/>
+            </span>
+        </div>
+        <div>
+            <button onclick="handleDownload()" id="download">納品書と送り先の宛名をダウンロード</button>
+        </div>
+    </body>
+    <script src="./jspdf.min.js"></script>
+    <script src="./papaparse.min.js"></script>
+    <script src="./scripts.js"></script>
+</html>

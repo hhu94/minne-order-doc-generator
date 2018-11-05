@@ -1,0 +1,5 @@
+Requirements
+- Orders made by the same customer should be merged into one order
+- Address thingy dimensions 8x4cm
+- Accept multiple CSVs
+- Orders should be sorted by ascending date
