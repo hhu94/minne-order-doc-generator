@@ -9,6 +9,7 @@ function generatePdf() {
     parseAndGenerate((orderSets, pdf) => {
         // Checklist
         let i = 1;
+        let currentX = 20;
         let currentY = 25;
         orderSets.forEach(orderSet => {
             if (i === 1 || currentY > 274) {
@@ -16,40 +17,63 @@ function generatePdf() {
                     pdf.addPage();
                 }
                 currentY = 25;
-                pdf.line(20, currentY - 6, 190, currentY - 6);
+                pdf.line(currentX, currentY - 6, 190, currentY - 6);
             }
-            pdf.text(20, currentY, `【${i}件目】 注文番号：${orderSet.orderId} ${orderSet.orders[0].配送先の氏名} 様`);
-            pdf.line(20, currentY + 3, 190, currentY + 3);
+            pdf.text(currentX, currentY, `【${i}件目】 注文番号：${orderSet.orderId} ${orderSet.orders[0].配送先の氏名} 様`);
+            pdf.line(currentX, currentY + 3, 190, currentY + 3);
             currentY += 10;
             i++;
         });
 
+        // Destination address slips
         pdf.addPage();
         i = 1;
+        orderSets.forEach(orderSet => {
+            if (i > 1 && i % 10 === 1) {
+                pdf.addPage();
+            }
+            currentX = i % 2 === 1 ? 20 : 115;
+            currentY = Math.floor((((i - 1) % 10) / 2)) * 56 + 16;
+            pdf.text(currentX, currentY, `【${i}件目】`);
+            pdf.text(currentX, currentY + 13, formatPostalCode(orderSet.orders[0].配送先の郵便番号));
+            const splitAddressText = pdf.splitTextToSize(
+                `${orderSet.orders[0].配送先の住所1} ${orderSet.orders[0].配送先の住所2}`,
+                70
+            );
+            pdf.text(currentX, currentY + 18, splitAddressText);
+            pdf.setFontSize(12);
+            pdf.text(currentX, currentY + 25.5 + 5.5 * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
+            pdf.setFontSize(10);
+            i++;
+        });
+
+        // Order slips
+        pdf.addPage();
+        i = 1;
+        currentX = 20;
         orderSets.forEach(orderSet => {
             if (i > 1) {
                 pdf.addPage();
             }
-
-            // Order slip
-            pdf.text(20, 20, `【${i}件目】`);
-            pdf.text(20, 30, [
+            currentY = 20;
+            pdf.text(currentX, currentY, `【${i}件目】`);
+            pdf.text(currentX, currentY + 10, [
                 `注文番号：${orderSet.orderId}`,
                 `お客様ID：${orderSet.orders[0].注文者のユーザーID}`,
                 `ご注文日：${orderSet.orders[0].注文日}`
             ]);
-            pdf.text(20, 50, [
+            pdf.text(currentX, currentY + 30, [
                 'この度は当ショップをご利用いただきありがとうございます。以下の通り納品させていただきます。',
                 '■ご注文商品■'
             ]);
-            currentY = 61;
+            currentY += 41;
             let total = 0;
             orderSet.orders.forEach(order => {
                 const splitText = pdf.splitTextToSize(
                     `□個数：${order.数量} ${order.作品名} 単価：${order.販売価格}円 小計：${order.小計}円`,
                     170
                 );
-                pdf.text(20, currentY, splitText);
+                pdf.text(currentX, currentY, splitText);
                 currentY += 5.5 * splitText.length;
                 if (currentY > 277) {
                     pdf.addPage();
@@ -57,20 +81,7 @@ function generatePdf() {
                 }
                 total += parseInt(order.小計, 10);
             });
-            pdf.text(20, currentY, `合計金額：${total}円`)
-
-            // Destination address slip
-            pdf.addPage();
-            pdf.text(20, 20, `【${i}件目】`);
-            pdf.text(20, 50, formatPostalCode(orderSet.orders[0].配送先の郵便番号));
-            const splitAddressText = pdf.splitTextToSize(
-                `${orderSet.orders[0].配送先の住所1} ${orderSet.orders[0].配送先の住所2}`,
-                70
-            );
-            pdf.text(20, 55, splitAddressText);
-            pdf.setFontSize(12);
-            pdf.text(20, 62.5 + 5.5 * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
-            pdf.setFontSize(10);
+            pdf.text(currentX, currentY, `合計金額：${total}円`)
             i++;
         });
         pdf.save();
@@ -123,7 +134,7 @@ function processData(orderData) {
             }
             return orderSets;
         }, {});
-    return Object.values(orderSets).sort((a, b) => a.orders[0].注文日.localeCompare(b.orders[0].注文日));
+    return Object.values(orderSets).sort((a, b) => a.orders[0].入金確認日.localeCompare(b.orders[0].入金確認日));
 }
 
 function verifyHeaders(order) {
