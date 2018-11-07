@@ -5,8 +5,9 @@ class OrderSet {
     }
 }
 
-function generatePdf() {
-    parseAndGenerate((orderSets, pdf) => {
+async function generatePdf() {
+    const logo = await (await fetch('logo-base64.txt')).text();
+    await parseAndGenerate((orderSets, pdf) => {
         // Checklist
         let i = 1;
         let currentX = 20;
@@ -35,14 +36,17 @@ function generatePdf() {
             currentX = i % 2 === 1 ? 20 : 115;
             currentY = Math.floor((((i - 1) % 10) / 2)) * 56 + 16;
             pdf.text(currentX, currentY, `【${i}件目】`);
-            pdf.text(currentX, currentY + 13, formatPostalCode(orderSet.orders[0].配送先の郵便番号));
+            currentY += 13;
+            pdf.text(currentX, currentY, formatPostalCode(orderSet.orders[0].配送先の郵便番号));
             const splitAddressText = pdf.splitTextToSize(
                 `${orderSet.orders[0].配送先の住所1} ${orderSet.orders[0].配送先の住所2}`,
                 70
             );
-            pdf.text(currentX, currentY + 18, splitAddressText);
+            currentY += 5;
+            pdf.text(currentX, currentY, splitAddressText);
             pdf.setFontSize(12);
-            pdf.text(currentX, currentY + 25.5 + 5.5 * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
+            currentY += 7.5;
+            pdf.text(currentX, currentY + getLineHeight(pdf) * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
             pdf.setFontSize(10);
             i++;
         });
@@ -57,16 +61,23 @@ function generatePdf() {
             }
             currentY = 20;
             pdf.text(currentX, currentY, `【${i}件目】`);
-            pdf.text(currentX, currentY + 10, [
+            currentY += 10 + getLineHeight(pdf);
+            pdf.text(currentX, currentY, [
+                formatPostalCode(orderSet.orders[0].配送先の郵便番号),
+                `${orderSet.orders[0].配送先の住所1} ${orderSet.orders[0].配送先の住所2}`,
+                `${orderSet.orders[0].配送先の氏名} 様`
+            ]);
+            currentY += 10 + 3 * getLineHeight(pdf);
+            pdf.text(currentX, currentY, 'この度は当ショップをご利用いただきありがとうございます。以下の通り納品させていただきます。');
+            currentY += 5 + getLineHeight(pdf);
+            pdf.text(currentX, currentY, [
                 `注文番号：${orderSet.orderId}`,
                 `お客様ID：${orderSet.orders[0].注文者のユーザーID}`,
                 `ご注文日：${orderSet.orders[0].注文日}`
             ]);
-            pdf.text(currentX, currentY + 30, [
-                'この度は当ショップをご利用いただきありがとうございます。以下の通り納品させていただきます。',
-                '■ご注文商品■'
-            ]);
-            currentY += 41;
+            currentY += 5 + 3 * getLineHeight(pdf);
+            pdf.text(currentX, currentY, '■ご注文商品■');
+            currentY += getLineHeight(pdf);
             let total = 0;
             orderSet.orders.forEach(order => {
                 const splitText = pdf.splitTextToSize(
@@ -74,7 +85,7 @@ function generatePdf() {
                     170
                 );
                 pdf.text(currentX, currentY, splitText);
-                currentY += 5.5 * splitText.length;
+                currentY += splitText.length * getLineHeight(pdf);
                 if (currentY > 277) {
                     pdf.addPage();
                     currentY = 20;
@@ -82,43 +93,75 @@ function generatePdf() {
                 total += parseInt(order.小計, 10);
             });
             pdf.text(currentX, currentY, `合計金額：${total}円`)
+
+            // Signature
+            const signatureHeight = 5 + 7 * getLineHeight(pdf);
+            if (currentY + 5 + signatureHeight > 277) {
+                // If it doesn't fit in this page, add another page
+                pdf.addPage();
+            }
+            currentY = 277 - signatureHeight;
+            // The logo is a square so its length and height are equal to the signature height
+            pdf.addImage(logo, 'JPEG', currentX, currentY, signatureHeight, signatureHeight);
+            currentX += signatureHeight + 13; // Separate logo from text signature
+            currentY += getLineHeight(pdf) / 2; // This is needed to line up signature text with logo
+            pdf.text(currentX, currentY, [
+                '〒723-0014',
+                '広島県三原市城町1丁目4-21 ミッキー堂ビル 2F',
+            ]);
+            currentY += 5 + 2 * getLineHeight(pdf);
+            pdf.text(currentX, currentY, [
+                'minne店',
+                '楽天市場店',
+                'ヤフーショップ',
+                '公式ホームページ',
+                'インスタグラム',
+            ]);
+            currentX += 35;
+            pdf.text(currentX, currentY, [
+                'https://minne.com/@nano-koubou',
+                'https://www.rakuten.ne.jp/gold/nanokoubou',
+                'https://store.shopping.yahoo.co.jp/nano-koubou',
+                'https://nano-koubou.shop',
+                'https://www.instagram.com/nano.workshop',
+            ]);
+            currentX = 20;
             i++;
         });
         pdf.save();
     });
 }
 
-function parseAndGenerate(generator) {
+async function parseAndGenerate(generator) {
     const files = getFiles();
     if (files.length === 0) {
         alertAndThrow('注文一覧データのCSVファイルを選んでください');
     }
-    fetch('sawarabi-gothic-base64.txt').then(response => response.text().then(font => {
-        // Configure PDF settings
-        const pdf = new jsPDF({lineHeight: 1.5});
-        pdf.addFileToVFS('sawarabi-gothic-base64.txt', font)
-        pdf.addFont('sawarabi-gothic-base64.txt', 'sawarabi-gothic', 'normal');
-        pdf.setFont('sawarabi-gothic');
-        pdf.setFontSize('10');
+    const font = await (await fetch('sawarabi-gothic-base64.txt')).text();
+    // Configure PDF settings
+    const pdf = new jsPDF({lineHeight: 1.5});
+    pdf.addFileToVFS('sawarabi-gothic-base64.txt', font)
+    pdf.addFont('sawarabi-gothic-base64.txt', 'sawarabi-gothic', 'normal');
+    pdf.setFont('sawarabi-gothic');
+    pdf.setFontSize('10');
 
-        // Parse CSV files
-        Papa.parse(files[0], {
-            header: true,
-            complete: results => {
-                if (files.length === 1) {
-                    generator(processData(results.data), pdf);
-                } else { // files.length === 2
-                    Papa.parse(files[1], {
-                        header: true,
-                        complete: results2 => {
-                            // Merge the data from both files, then process it as a whole
-                            generator(processData(results.data.concat(results2.data)), pdf);
-                        }
-                    })
-                }
+    // Parse CSV files
+    Papa.parse(files[0], {
+        header: true,
+        complete: results => {
+            if (files.length === 1) {
+                generator(processData(results.data), pdf);
+            } else { // files.length === 2
+                Papa.parse(files[1], {
+                    header: true,
+                    complete: results2 => {
+                        // Merge the data from both files, then process it as a whole
+                        generator(processData(results.data.concat(results2.data)), pdf);
+                    }
+                })
             }
-        });
-    }));
+        }
+    });
 }
 
 function processData(orderData) {
@@ -134,7 +177,7 @@ function processData(orderData) {
             }
             return orderSets;
         }, {});
-    return Object.values(orderSets).sort((a, b) => a.orders[0].入金確認日.localeCompare(b.orders[0].入金確認日));
+    return Object.values(orderSets).sort((a, b) => b.orders[0].注文ID.localeCompare(a.orders[0].注文ID));
 }
 
 function verifyHeaders(order) {
@@ -175,4 +218,8 @@ function alertAndThrow(errorMessage) {
 
 function formatPostalCode(postalCode) {
     return `〒${postalCode.substring(0, 3)}-${postalCode.substring(3)}`;
+}
+
+function getLineHeight(pdf) {
+    return pdf.getLineHeight() / 2.835;
 }
