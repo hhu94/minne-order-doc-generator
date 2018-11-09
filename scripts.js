@@ -26,31 +26,6 @@ async function generatePdf() {
             i++;
         });
 
-        // Destination address slips
-        pdf.addPage();
-        i = 1;
-        orderSets.forEach(orderSet => {
-            if (i > 1 && i % 10 === 1) {
-                pdf.addPage();
-            }
-            currentX = i % 2 === 1 ? 20 : 115;
-            currentY = Math.floor((((i - 1) % 10) / 2)) * 56 + 16;
-            pdf.text(currentX, currentY, `【${i}件目】`);
-            currentY += 13;
-            pdf.text(currentX, currentY, formatPostalCode(orderSet.orders[0].配送先の郵便番号));
-            const splitAddressText = pdf.splitTextToSize(
-                `${orderSet.orders[0].配送先の住所1} ${orderSet.orders[0].配送先の住所2}`,
-                70
-            );
-            currentY += 5;
-            pdf.text(currentX, currentY, splitAddressText);
-            pdf.setFontSize(12);
-            currentY += 7.5;
-            pdf.text(currentX, currentY + getLineHeight(pdf) * (splitAddressText.length - 1), `${orderSet.orders[0].配送先の氏名} 様`);
-            pdf.setFontSize(10);
-            i++;
-        });
-
         // Order slips
         pdf.addPage();
         i = 1;
