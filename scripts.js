@@ -112,12 +112,12 @@ async function parseAndGenerate(generator) {
     if (files.length === 0) {
         alertAndThrow('注文一覧データのCSVファイルを選んでください');
     }
-    const font = await (await fetch('sawarabi-gothic-base64.txt')).text();
+    const font = await (await fetch('yu-mincho-base64.txt')).text();
     // Configure PDF settings
     const pdf = new jsPDF({lineHeight: 1.5});
-    pdf.addFileToVFS('sawarabi-gothic-base64.txt', font)
-    pdf.addFont('sawarabi-gothic-base64.txt', 'sawarabi-gothic', 'normal');
-    pdf.setFont('sawarabi-gothic');
+    pdf.addFileToVFS('yu-mincho-base64.txt', font)
+    pdf.addFont('yu-mincho-base64.txt', 'yu-mincho', 'normal');
+    pdf.setFont('yu-mincho');
     pdf.setFontSize('10');
 
     // Parse CSV files
