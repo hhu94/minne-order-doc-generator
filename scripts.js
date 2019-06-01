@@ -56,7 +56,7 @@ async function generatePdf() {
             let total = 0;
             orderSet.orders.forEach(order => {
                 const splitText = pdf.splitTextToSize(
-                    `□個数：${order.数量} ${order.作品名} 単価：${order.販売価格}円 小計：${order.小計}円`,
+                    `□個数：${order.数量}　${order.作品名}　単価：${order.販売価格}円　小計：${order.小計}円`,
                     170
                 );
                 pdf.text(currentX, currentY, splitText);
