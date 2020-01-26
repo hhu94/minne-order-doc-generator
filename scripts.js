@@ -79,7 +79,7 @@ async function generatePdf() {
             // The logo is a square so its length and height are equal to the signature height
             pdf.addImage(logo, 'JPEG', currentX, currentY, signatureHeight, signatureHeight);
             currentX += signatureHeight + 13; // Separate logo from text signature
-            currentY += getLineHeight(pdf) / 2; // This is needed to line up signature text with logo
+            currentY += getLineHeight(pdf); // This is needed to line up signature text with logo
             pdf.text(currentX, currentY, [
                 '〒710-0842',
                 '岡山県倉敷市吉岡227-3',
