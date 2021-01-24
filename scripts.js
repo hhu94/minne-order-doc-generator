@@ -81,8 +81,8 @@ async function generatePdf() {
             currentX += signatureHeight + 13; // Separate logo from text signature
             currentY += getLineHeight(pdf); // This is needed to line up signature text with logo
             pdf.text(currentX, currentY, [
-                '〒710-0842',
-                '岡山県倉敷市吉岡227-3',
+                '〒723-0014',
+                '広島県三原市城町1-9-2',
             ]);
             currentY += 5 + 2 * getLineHeight(pdf);
             pdf.text(currentX, currentY, [
