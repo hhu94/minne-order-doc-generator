@@ -79,7 +79,7 @@ async function generatePdf() {
             // The logo is a square so its length and height are equal to the signature height
             pdf.addImage(logo, 'JPEG', currentX, currentY, signatureHeight, signatureHeight);
             currentX += signatureHeight + 13; // Separate logo from text signature
-            currentY += getLineHeight(pdf); // This is needed to line up signature text with logo
+            currentY += 2 * getLineHeight(pdf); // This is needed to vertically center the following text block with the logo
             pdf.text(currentX, currentY, [
                 '〒723-0014',
                 '広島県三原市城町1-9-2',
@@ -88,14 +88,12 @@ async function generatePdf() {
             pdf.text(currentX, currentY, [
                 'minne店',
                 '楽天市場店',
-                '公式ホームページ',
                 'インスタグラム',
             ]);
             currentX += 35;
             pdf.text(currentX, currentY, [
                 'https://minne.com/@nano-koubou',
                 'https://www.rakuten.ne.jp/gold/nanokoubou',
-                'https://nano-koubou.shop',
                 'https://www.instagram.com/nano.workshop',
             ]);
             currentX = 20;
