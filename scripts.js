@@ -82,7 +82,7 @@ async function generatePdf() {
             currentY += 2 * getLineHeight(pdf); // This is needed to vertically center the following text block with the logo
             pdf.text(currentX, currentY, [
                 '〒723-0014',
-                '広島県三原市城町1-9-2',
+                '広島県三原市城町2−3−1   3階',
             ]);
             currentY += 5 + 2 * getLineHeight(pdf);
             pdf.text(currentX, currentY, [
