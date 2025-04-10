@@ -1,3 +1,5 @@
+const { jsPDF } = window.jspdf;
+
 class OrderSet {
     constructor(orderId, orders) {
         this.orderId = orderId;
